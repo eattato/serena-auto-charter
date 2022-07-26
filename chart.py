@@ -7,6 +7,7 @@ bpm = 155 # 분당 비트 수
 bps = bpm / 60 # 초당 비트 수
 beat = 1 / bps # 비트 간 길이(간격)
 currentBeat = 1 # 현재 진행된 비트 수
+checkingSample = 5 # loudness 체크할 샘플레이트 수
 
 # 파일 열기
 file = wave.open("./song.wav", "rb")
@@ -28,8 +29,14 @@ print("bpm: {}, bps: {}, beat: {}, rpb: {}".format(bpm, bps, beat, ratePerBeat))
 # 총 비트 수 = 오디오 길이 / 비트 간격
 while currentBeat <= audioLength / beat:
     currentSample = int(ratePerBeat * currentBeat)
-    loudnessL = channelL[currentSample]
-    loudnessR = channelR[currentSample]
-    loudness = abs((loudnessL + loudnessR) / 2)
+    loudnessL = 0
+    loudnessR = 0
+    for sample in range(5):
+        loudnessL += abs(channelL[currentSample + sample])
+    for sample in range(5):
+        loudnessR += abs(channelR[currentSample + sample])
+    loudnessL /= 5
+    loudnessR /= 5
+    loudness = (loudnessL + loudnessR) / 2
     print(loudness)
     currentBeat += 1
