@@ -51,7 +51,7 @@ while currentBeat <= audioLength / beat:
 
     if loudness >= freqMin:
         # 타이밍, 노트 라인, 노트 슬라이드, 롱놋 포지션
-        result.write("{},{},{},{}\n".format(timing, random.randrange(1, 3), random.randrange(0, 5), -1))
+        result.write("{},{},{},{}\n".format(int(timing / 1000), random.randrange(1, 3), random.randrange(0, 5), -1))
     currentBeat += 1
 result.close()
 # plt.figure(figsize=(15, 5))
