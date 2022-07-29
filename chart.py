@@ -5,8 +5,14 @@ import random
 import matplotlib.pyplot as plt
 
 # BPM
-bpm = 190 # 분당 비트 수
-bpm *= 2
+bpm = 187 # 분당 비트 수
+bpmMult = 1
+
+bpmMultTiming = { # 변속
+    0: 2,
+    122: 1.5,
+    143: 1 / 1.5
+}
 
 bps = bpm / 60 # 초당 비트 수
 beat = 1 / bps # 비트 간 길이(간격)
@@ -35,23 +41,41 @@ print("samplerate: {}, nframes: {}, length: {}:{}".format(sampleRate, frameSampl
 print("bpm: {}, bps: {}, beat: {}, rpb: {}".format(bpm, bps, beat, ratePerBeat))
 
 # 총 비트 수 = 오디오 길이 / 비트 간격
-while currentBeat <= audioLength / beat:
-    timing = currentBeat * beat
-    currentSample = int(ratePerBeat * currentBeat)
+#while currentBeat <= audioLength / beat:
+timing = 0
+sampleTiming = 0
+while currentBeat * beat <= audioLength:
+    timing += beat
+    for multTiming in bpmMultTiming:
+        if multTiming <= timing and bpmMultTiming[multTiming] != 1:
+            bpmMult = bpmMultTiming[multTiming]
+            bpm *= bpmMult
+            bps = bpm / 60 # 초당 비트 수
+            beat = 1 / bps # 비트 간 길이(간격)
+            ratePerBeat = sampleRate * beat
+            bpmMultTiming[multTiming] = 1 # 해당 타이밍의 배수를 1로 맞춰서 무효화
+            print("bpm: {}, bps: {}, beat: {}, rpb: {}".format(bpm, bps, beat, ratePerBeat))
+    sampleTiming += ratePerBeat
+    currentSample = int(sampleTiming)
     loudnessL = 0
     loudnessR = 0
     for sample in range(5):
-        loudnessL += abs(channelL[currentSample + sample])
+        try:
+            loudnessL += abs(channelL[currentSample + sample])
+        except:
+            print("frame overflow")
     for sample in range(5):
-        loudnessR += abs(channelR[currentSample + sample])
+        try:
+            loudnessR += abs(channelR[currentSample + sample])
+        except:
+            print("frame overflow")
     loudnessL /= 5
     loudnessR /= 5
     loudness = (loudnessL + loudnessR) / 2
-    #print(loudness)
 
     if loudness >= freqMin:
         # 타이밍, 노트 라인, 노트 슬라이드, 롱놋 포지션
-        result.write("{},{},{},{}\n".format(int(timing / 1000), random.randrange(1, 3), random.randrange(0, 5), -1))
+        result.write("{},{},{},{}\n".format(str(int(float(timing) * 1000)), random.randrange(1, 3), random.randrange(0, 5), -1))
     currentBeat += 1
 result.close()
 # plt.figure(figsize=(15, 5))
